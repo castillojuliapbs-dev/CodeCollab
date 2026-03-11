@@ -14,10 +14,12 @@ register_shutdown_function(function () {
 // Set the working directory to the Laravel root
 chdir(__DIR__ . '/..');
 
-// Create writable bootstrap cache and storage dirs in /tmp BEFORE bootstrapping
+// Create writable dirs in /tmp for serverless
 $storagePath = '/tmp/storage';
+$bootstrapCachePath = '/tmp/bootstrap/cache';
 
 $dirs = [
+    $bootstrapCachePath,
     $storagePath . '/app/public',
     $storagePath . '/framework/cache/data',
     $storagePath . '/framework/sessions',
@@ -29,9 +31,19 @@ foreach ($dirs as $dir) {
     if (!is_dir($dir)) mkdir($dir, 0755, true);
 }
 
+// Copy bootstrap cache files to writable /tmp if they don't exist yet
+$cacheFiles = ['packages.php', 'services.php'];
+foreach ($cacheFiles as $file) {
+    $src = __DIR__ . '/../bootstrap/cache/' . $file;
+    $dst = $bootstrapCachePath . '/' . $file;
+    if (file_exists($src) && !file_exists($dst)) {
+        copy($src, $dst);
+    }
+}
+
 putenv('VIEW_COMPILED_PATH=' . $storagePath . '/framework/views');
 
-// Override APP_KEY to ensure correct value regardless of dashboard setting
+// Override APP_KEY
 putenv('APP_KEY=base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=');
 $_ENV['APP_KEY'] = 'base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=';
 $_SERVER['APP_KEY'] = 'base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=';
@@ -43,7 +55,8 @@ require __DIR__ . '/../vendor/autoload.php';
 try {
     $app = require __DIR__ . '/../bootstrap/app.php';
 
-    // Redirect only storage to writable /tmp (bootstrap/cache is committed to git)
+    // Use writable /tmp paths for both bootstrap cache and storage
+    $app->useBootstrapPath('/tmp/bootstrap');
     $app->useStoragePath($storagePath);
 
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
