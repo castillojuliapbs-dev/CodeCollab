@@ -14,25 +14,21 @@ register_shutdown_function(function () {
 // Set the working directory to the Laravel root
 chdir(__DIR__ . '/..');
 
-// Create storage directories in /tmp for serverless BEFORE bootstrapping
+// Create writable bootstrap cache and storage dirs in /tmp BEFORE bootstrapping
 $storagePath = '/tmp/storage';
-$directories = [
-    $storagePath,
-    $storagePath . '/app',
+$bootstrapPath = '/tmp/bootstrap';
+
+$dirs = [
+    $bootstrapPath . '/cache',
     $storagePath . '/app/public',
-    $storagePath . '/framework',
-    $storagePath . '/framework/cache',
     $storagePath . '/framework/cache/data',
     $storagePath . '/framework/sessions',
     $storagePath . '/framework/views',
     $storagePath . '/framework/testing',
     $storagePath . '/logs',
 ];
-
-foreach ($directories as $directory) {
-    if (!is_dir($directory)) {
-        mkdir($directory, 0755, true);
-    }
+foreach ($dirs as $dir) {
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
 }
 
 putenv('VIEW_COMPILED_PATH=' . $storagePath . '/framework/views');
@@ -43,6 +39,9 @@ require __DIR__ . '/../vendor/autoload.php';
 // Bootstrap Laravel
 try {
     $app = require_once __DIR__ . '/../bootstrap/app.php';
+
+    // Redirect bootstrap cache and storage to writable /tmp paths
+    $app->useBootstrapPath($bootstrapPath);
     $app->useStoragePath($storagePath);
 
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
