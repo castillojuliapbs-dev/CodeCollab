@@ -48,6 +48,14 @@ putenv('APP_KEY=base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=');
 $_ENV['APP_KEY'] = 'base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=';
 $_SERVER['APP_KEY'] = 'base64:ZRDIgm3AJnVH/tJK2aZnPm5LsSSC8bVi3H43FPWA+wU=';
 
+// Set APP_URL dynamically from the request host so asset() works correctly
+$host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scheme = ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? 'https');
+$appUrl = $scheme . '://' . $host;
+putenv("APP_URL={$appUrl}");
+$_ENV['APP_URL'] = $appUrl;
+$_SERVER['APP_URL'] = $appUrl;
+
 // Load Composer autoloader
 require __DIR__ . '/../vendor/autoload.php';
 
