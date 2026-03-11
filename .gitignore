@@ -18,7 +18,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
-/vendor
+# /vendor is intentionally NOT ignored so Vercel can deploy PHP dependencies
 Homestead.json
 Homestead.yaml
 Thumbs.db
