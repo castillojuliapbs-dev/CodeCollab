@@ -1,19 +1,34 @@
 <?php
 
-// Catch any fatal startup errors and display them
-set_exception_handler(function ($e) {
-    http_response_code(500);
-    header('Content-Type: text/html');
-    echo '<h1>Startup Error</h1>';
-    echo '<pre>' . htmlspecialchars($e->getMessage()) . "\n" . htmlspecialchars($e->getTraceAsString()) . '</pre>';
-    exit(1);
+// TEMPORARY DEBUG - test if PHP runtime works at all
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error) {
+        http_response_code(500);
+        echo '<h1>Fatal Error</h1><pre>' . htmlspecialchars(print_r($error, true)) . '</pre>';
+    }
 });
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
-// Set the working directory to the Laravel root
-chdir(__DIR__ . '/..');
+echo '<h2>PHP is working! Version: ' . phpversion() . '</h2>';
+echo '<h3>Checking autoloader...</h3>';
+
+if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    die('<p style="color:red">ERROR: vendor/autoload.php not found!</p>');
+}
+echo '<p style="color:green">vendor/autoload.php EXISTS</p>';
+
+echo '<h3>Checking APP_KEY env...</h3>';
+$key = getenv('APP_KEY');
+echo '<p>' . ($key ? 'APP_KEY is SET (length: ' . strlen($key) . ')' : '<span style="color:red">APP_KEY is NOT SET</span>') . '</p>';
+
+echo '<h3>Checking DB_HOST env...</h3>';
+$db = getenv('DB_HOST');
+echo '<p>' . ($db ? 'DB_HOST is SET: ' . htmlspecialchars($db) : '<span style="color:red">DB_HOST is NOT SET</span>') . '</p>';
+
+echo '<h3>Done!</h3>';
 
 // Load Composer autoloader
 require __DIR__ . '/../vendor/autoload.php';
